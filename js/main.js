@@ -279,6 +279,11 @@ class DeadOClockGame {
         e.preventDefault();
       });
 
+      document.getElementById("btnTouchMap")?.addEventListener("touchstart", (e) => {
+        this.showMinimap = !this.showMinimap;
+        e.preventDefault();
+      });
+
       document.getElementById("btnTouchPause")?.addEventListener("touchstart", (e) => {
         this.state.mode = "paused";
         this._showDOMScreen("paused");

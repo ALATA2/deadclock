@@ -169,40 +169,101 @@ export class UIManager {
 
   drawMinimap(state, player) {
     const map = state.currentMapData;
-    const size = 3;
-    const startX = 10;
+    const w = CONFIG.INTERNAL_WIDTH;
+    const h = CONFIG.INTERNAL_HEIGHT;
+
+    // Centered tactical automap
+    const size = 4;
+    const mapW = map.width * size;
+    const mapH = map.height * size;
+    const startX = Math.floor((w - mapW) / 2);
     const startY = 10;
 
-    this.ctx.fillStyle = "rgba(10, 5, 18, 0.85)";
-    this.ctx.fillRect(startX - 2, startY - 2, map.width * size + 4, map.height * size + 4);
+    // Background container
+    this.ctx.fillStyle = "rgba(8, 3, 20, 0.92)";
+    this.ctx.fillRect(startX - 8, startY - 8, mapW + 16, mapH + 34);
+    this.ctx.strokeStyle = "#8b3fe8";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(startX - 8, startY - 8, mapW + 16, mapH + 34);
 
+    // Header Title
+    this.ctx.fillStyle = "#ffea00";
+    this.ctx.font = "bold 7px monospace";
+    this.ctx.textAlign = "center";
+    this.ctx.fillText(`MAPPA: ${map.name}`, w / 2, startY - 1);
+
+    // Draw grid floors & sector heights
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
         const tile = map.grid[y][x];
+        const px = startX + x * size;
+        const py = startY + y * size;
+
         if (tile > 0) {
-          this.ctx.fillStyle = tile === 10 ? "#ff7b00" : (tile === 3 ? "#39ff14" : "#4a4e69");
-          this.ctx.fillRect(startX + x * size, startY + y * size, size, size);
+          // Walls
+          if (tile === 10) this.ctx.fillStyle = "#ff7b00"; // Keyed Door
+          else if (tile === 11) this.ctx.fillStyle = "#8a5020"; // Wooden Door
+          else if (tile === 3) this.ctx.fillStyle = "#39ff14"; // Secret Wall
+          else this.ctx.fillStyle = "#4a4e69"; // Normal Wall
+          this.ctx.fillRect(px, py, size, size);
+        } else {
+          // Walkable tile (check sector elevation)
+          let isElevated = false;
+          let isSunken = false;
+          if (map.heights) {
+            for (const zone of map.heights) {
+              if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
+                if (zone.floor > 0) isElevated = true;
+                if (zone.floor < 0) isSunken = true;
+                break;
+              }
+            }
+          }
+          if (isElevated) this.ctx.fillStyle = "#2a1545"; // Raised plateau
+          else if (isSunken) this.ctx.fillStyle = "#0d1b2a"; // Sunken ditch/water
+          else this.ctx.fillStyle = "#120f18"; // Normal floor
+          this.ctx.fillRect(px, py, size, size);
         }
       }
     }
 
-    // Draw enemies
+    // Draw Pickups & Items
+    for (const p of state.entities.pickups) {
+      if (p.collected) continue;
+      this.ctx.fillStyle = p.type.startsWith("KEY") ? "#ffea00" : "#48cae4";
+      this.ctx.fillRect(startX + Math.floor(p.x) * size + 1, startY + Math.floor(p.y) * size + 1, size - 2, size - 2);
+    }
+
+    // Draw Enemies (Red for normal, Orange-Red pulsing for Boss)
     for (const e of state.entities.enemies) {
       if (e.hp <= 0) continue;
-      this.ctx.fillStyle = e.isBoss ? "#ff0000" : "#ffaa00";
+      this.ctx.fillStyle = e.isBoss ? "#ff0000" : "#c1121f";
       this.ctx.fillRect(startX + Math.floor(e.x) * size, startY + Math.floor(e.y) * size, size, size);
     }
 
-    // Draw player
-    this.ctx.fillStyle = "#39ff14";
-    this.ctx.fillRect(startX + Math.floor(player.x) * size, startY + Math.floor(player.y) * size, size, size);
+    // Draw Player marker & view cone
+    const plX = startX + player.x * size;
+    const plY = startY + player.y * size;
 
-    // Direction line
-    this.ctx.strokeStyle = "#39ff14";
+    this.ctx.fillStyle = "#39ff14";
     this.ctx.beginPath();
-    this.ctx.moveTo(startX + player.x * size, startY + player.y * size);
-    this.ctx.lineTo(startX + (player.x + Math.cos(player.angle) * 3) * size, startY + (player.y + Math.sin(player.angle) * 3) * size);
+    this.ctx.arc(plX, plY, size / 1.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Direction arrow
+    this.ctx.strokeStyle = "#39ff14";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(plX, plY);
+    this.ctx.lineTo(plX + Math.cos(player.angle) * (size * 2), plY + Math.sin(player.angle) * (size * 2));
     this.ctx.stroke();
+
+    // Legend at bottom of automap
+    this.ctx.font = "5px monospace";
+    this.ctx.textAlign = "center";
+    this.ctx.fillStyle = "#e0dacf";
+    this.ctx.fillText("🟢 Tu  🔴 Nemici  🟦/🟪 Dislivelli  🟧 Porte  ⭐ Oggetti", w / 2, startY + mapH + 12);
+    this.ctx.fillText("Premi [M] per chiudere la mappa", w / 2, startY + mapH + 20);
   }
 
   drawDebug(state, player, fps, drawCalls) {
