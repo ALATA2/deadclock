@@ -184,9 +184,19 @@ export class RaycasterRenderer {
 
       // Vertical position with sector heights
       const lineHeight = Math.floor((this.height / Math.max(0.1, correctedDist)));
-      const horizon = Math.floor(this.height / 2 + pZ * (lineHeight / 2));
-      const drawStart = Math.floor(horizon - lineHeight / 2);
-      const drawEnd = Math.floor(horizon + lineHeight / 2);
+      let drawStart = Math.floor(horizon - lineHeight / 2);
+      let drawEnd = Math.floor(horizon + lineHeight / 2);
+
+      // If animated door is opening, slide upwards
+      if (isDoor && doorProgress > 0) {
+        const offset = Math.floor(lineHeight * doorProgress);
+        drawStart -= offset;
+        drawEnd -= offset;
+        if (drawEnd <= horizon - lineHeight / 2) {
+          // Door fully slid up, do not render column
+          continue;
+        }
+      }
 
       // Texture coordinate calculation
       let wallX;

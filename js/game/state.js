@@ -197,7 +197,7 @@ export class GameState {
       this.showMessage(STRINGS.it.SWITCH_ACTIVATED, 2.5);
       if (sw.targetDoor) {
         const d = map.doors?.find((dr) => dr.x === sw.targetDoor.x && dr.y === sw.targetDoor.y);
-        if (d) d.open = true;
+        if (d) d.opening = true;
       }
       if (sw.targetSecret) {
         map.grid[sw.targetSecret.y][sw.targetSecret.x] = 0; // open secret wall
@@ -221,9 +221,9 @@ export class GameState {
 
     // Check doors
     const door = map.doors?.find((d) => d.x === targetX && d.y === targetY);
-    if (door && !door.open) {
+    if (door && !door.open && !door.opening) {
       if (!door.key) {
-        door.open = true;
+        door.opening = true;
         sound.playDoor();
         return;
       }
@@ -236,7 +236,7 @@ export class GameState {
       if (door.key === "purple" && this.inventory.hasKeyPurple) hasKey = true;
 
       if (hasKey) {
-        door.open = true;
+        door.opening = true;
         sound.playDoor();
         this.showMessage("PORTA SBLOCCATA!", 2.0);
       } else {
@@ -273,6 +273,19 @@ export class GameState {
       if (distExit < 0.9) {
         this.mode = "level_cleared";
         sound.playSecret();
+      }
+    }
+
+    // Update animated doors (smooth vertical slide open)
+    if (this.currentMapData && this.currentMapData.doors) {
+      for (const d of this.currentMapData.doors) {
+        if (d.opening && d.progress < 1.0) {
+          d.progress = Math.min(1.0, d.progress + dt * 1.5);
+          if (d.progress >= 1.0) {
+            d.open = true;
+            d.opening = false;
+          }
+        }
       }
     }
 
