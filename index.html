@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DEAD O'CLOCK: The Halloween Massacre</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="gameContainer">
+    <!-- Main 2.5D Raycaster Canvas -->
+    <canvas id="gameCanvas" width="320" height="180"></canvas>
+
+    <!-- SCREEN: Title / Main Menu -->
+    <div id="screenTitle" class="screen-overlay">
+      <h1 class="title-glow">DEAD O'CLOCK</h1>
+      <h2 class="subtitle-glow">The Halloween Massacre</h2>
+      <div class="menu-box">
+        <button id="btnNewGame" class="retro-btn">Nuova Partita</button>
+        <button id="btnContinue" class="retro-btn" style="display: none;">Continua</button>
+        <button id="btnControls" class="retro-btn">Comandi</button>
+        <button id="btnSettings" class="retro-btn">Impostazioni</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: Level Intro / Story Briefing -->
+    <div id="screenIntro" class="screen-overlay" style="display: none;">
+      <h3 id="introLevelNumber" style="color: #ff7b00; margin-bottom: 8px;">LIVELLO 1</h3>
+      <h1 id="introLevelTitle" class="title-glow" style="font-size: 2.2rem;">IL BOSCO DELLA LUNA MORTA</h1>
+      <div class="panel-content" id="introLevelText">
+        Halloween 1993. I rintocchi dell'Orologio Maledetto fermano il tempo a mezzanotte.
+      </div>
+      <button id="btnStartLevel" class="retro-btn">ENTRA NEL TERRORE</button>
+    </div>
+
+    <!-- SCREEN: Paused -->
+    <div id="screenPaused" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow">PAUSA</h1>
+      <div class="menu-box">
+        <button id="btnResume" class="retro-btn">Riprendi Gioco</button>
+        <button id="btnRestartLevel" class="retro-btn">Ricomincia Livello</button>
+        <button id="btnPauseToMenu" class="retro-btn danger">Torna al Menu</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: Level Cleared / Intermission -->
+    <div id="screenLevelCleared" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow" style="color: #39ff14;">LIVELLO SUPERATO!</h1>
+      <div class="panel-content">
+        <div class="setting-row">
+          <span>Nemici Eliminati:</span>
+          <span id="statsKills" style="color: #ffea00;">0 / 0</span>
+        </div>
+        <div class="setting-row">
+          <span>Segreti Trovati:</span>
+          <span id="statsSecrets" style="color: #39ff14;">0 / 0</span>
+        </div>
+        <div class="setting-row">
+          <span>Tempo Impiegato:</span>
+          <span id="statsTime" style="color: #48cae4;">0:00</span>
+        </div>
+      </div>
+      <button id="btnNextLevel" class="retro-btn">PROSEGUI NEL TERRORE</button>
+    </div>
+
+    <!-- SCREEN: Game Over -->
+    <div id="screenGameOver" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow" style="color: #c1121f;">SEI STATO CONSUMATO</h1>
+      <h2 class="subtitle-glow">L'ora morta reclama la tua anima...</h2>
+      <div class="menu-box">
+        <button id="btnRetry" class="retro-btn">Riprova Livello</button>
+        <button id="btnGameOverToMenu" class="retro-btn danger">Menu Principale</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: Victory / Ending -->
+    <div id="screenVictory" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow" style="color: #ffa200;">MALEDIZIONE SPEZZATA!</h1>
+      <h2 class="subtitle-glow">L'alba del 1° Novembre dissipa le tenebre.</h2>
+      <div class="panel-content">
+        Hai sconfitto Clock Reaper e ripristinato lo scorrere del tempo eterno. L'incubo di Halloween è finito!
+      </div>
+      <button id="btnVictoryToMenu" class="retro-btn">TORNA AL MENU</button>
+    </div>
+
+    <!-- SCREEN: Controls -->
+    <div id="screenControls" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow" style="font-size: 2.2rem;">COMANDI</h1>
+      <div class="panel-content" style="text-align: left;">
+        <p><strong>W, A, S, D / Frecce:</strong> Movimento e Passo Laterale</p>
+        <p><strong>Mouse / Frecce SX, DX:</strong> Rotazione Visuale</p>
+        <p><strong>Click Sinistro / Ctrl:</strong> Attacco</p>
+        <p><strong>E / Spazio:</strong> Usa / Apri Porte / Leve / Segreti</p>
+        <p><strong>Shift:</strong> Corsa</p>
+        <p><strong>1, 2, 3, 4, 5 / Rotella Mouse:</strong> Cambio Arma</p>
+        <p><strong>M:</strong> Minimappa Tattica</p>
+        <p><strong>F3:</strong> Monitor Prestazioni e Debug</p>
+        <p><strong>Esc:</strong> Pausa</p>
+      </div>
+      <button id="btnCloseControls" class="retro-btn">CHIUDI</button>
+    </div>
+
+    <!-- SCREEN: Settings -->
+    <div id="screenSettings" class="screen-overlay" style="display: none;">
+      <h1 class="title-glow" style="font-size: 2.2rem;">IMPOSTAZIONI</h1>
+      <div class="panel-content">
+        <div class="setting-row">
+          <span>Volume Audio:</span>
+          <input type="range" id="settingVolume" min="0" max="100" value="70">
+        </div>
+        <div class="setting-row">
+          <span>Sensibilità Mouse:</span>
+          <input type="range" id="settingSens" min="10" max="80" value="25">
+        </div>
+        <div class="setting-row">
+          <span>Qualità Grafica:</span>
+          <select id="settingQuality">
+            <option value="high">Alta (Dettagli Completi)</option>
+            <option value="low">Bassa (Prestazioni Massime)</option>
+          </select>
+        </div>
+      </div>
+      <button id="btnCloseSettings" class="retro-btn">CONFERMA E SALVA</button>
+    </div>
+
+    <!-- Mobile Touch Interface -->
+    <div id="touchControls">
+      <div id="touchJoystickZone">
+        <div id="touchJoystickNub"></div>
+      </div>
+      <div id="touchLookZone"></div>
+      <div class="touch-buttons-bar">
+        <button id="btnTouchFire" class="touch-btn primary">FUOCO</button>
+        <button id="btnTouchUse" class="touch-btn">USA</button>
+        <button id="btnTouchWeapon" class="touch-btn">ARMA</button>
+        <button id="btnTouchPause" class="touch-btn">PAUSA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript ES6 Entrypoint -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
