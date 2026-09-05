@@ -184,6 +184,7 @@ export class RaycasterRenderer {
 
       // Vertical position with sector heights
       const lineHeight = Math.floor((this.height / Math.max(0.1, correctedDist)));
+      const horizon = Math.floor(this.height / 2 + pZ * (lineHeight / 2));
       let drawStart = Math.floor(horizon - lineHeight / 2);
       let drawEnd = Math.floor(horizon + lineHeight / 2);
 
